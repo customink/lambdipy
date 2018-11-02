@@ -9,8 +9,8 @@ services:
 if: branch = master OR type = pull_request
 
 install:
-  - pip install tox
-  - pip install .
+  - pip install tox pipsi
+  - pipsi install .
 
 script:
   - echo "The test passes"
