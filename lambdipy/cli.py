@@ -43,7 +43,7 @@ def build(from_pipenv, include):
     else:
         requirements = parse_requirements(open('requirements.txt').read())
 
-    release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'releases/**/**/build*.json')
+    release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
     package_builds = build_package_build_dict(glob.glob(release_paths))
 
     try:
@@ -69,7 +69,8 @@ def build(from_pipenv, include):
 
 @cli.command()
 def release():
-    for path in glob.glob('./releases/**/**/build*.json'):
+    release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
+    for path in glob.glob(release_paths):
         package_build = PackageBuild(path)
         # print(open(path).read())
         # print(str(package_build))

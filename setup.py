@@ -2,6 +2,7 @@
 A tool for building and packaging python packages for AWS Lambda.
 """
 from setuptools import find_packages, setup
+import glob
 
 dependencies = ['click', 'pygithub', 'docker', 'requirementslib', 'pipenv']
 
@@ -24,7 +25,11 @@ setup(
             'lambdipy = lambdipy.cli:cli',
         ],
     },
-    data_files=[('releases', 'releases/*')],
+    package_data={
+        'lambdipy': [
+            'releases/**/**/*.json'
+        ]
+    },
     classifiers=[
         # As from http://pypi.python.org/pypi?%3Aaction=list_classifiers
         # 'Development Status :: 1 - Planning',
