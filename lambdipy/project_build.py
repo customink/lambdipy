@@ -187,7 +187,7 @@ def _run_command_in_docker(command, build_directory):
     os.remove(build_directory + '/passwd')
 
 
-def install_non_resolved_requirements(resolved_requirements, requirements, install_deps=True, build_directory='./build'):
+def install_non_resolved_requirements(resolved_requirements, requirements, build_directory='./build'):
     packages_to_install = ''
     for requirement in requirements:
         if resolved_requirements[requirement['requirement'].name] is not None:
@@ -195,8 +195,6 @@ def install_non_resolved_requirements(resolved_requirements, requirements, insta
         requirement_line = requirement['line']
         packages_to_install += f' "{requirement_line}"'
     install_command = f'GIT_SSH_COMMAND="/usr/bin/ssh -o StrictHostKeyChecking=no" pip install {packages_to_install} -t /export'
-    if not install_deps:
-        install_command += ' --no-deps'
 
     print(f'Installing remaining packages via pip:{packages_to_install}')
 
