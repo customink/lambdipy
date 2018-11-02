@@ -27,7 +27,7 @@ def _get_release_by_tag(tag, use_token):
     return GitRelease(repo._requester, headers, data, completed=True)
 
 
-def get_release(build, use_token=True):
+def get_release(build, use_token=False):
     try:
         return _get_release_by_tag(build.git_tag(), use_token=use_token)
     except UnknownObjectException:
