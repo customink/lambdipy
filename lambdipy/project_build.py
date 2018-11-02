@@ -96,11 +96,24 @@ def build_and_prepare_package(package_build):
     return package_build.build_directory()
 
 
+def find_package_in_cache(package_build):
+    download_directory = os.environ['HOME'] + '/.lambdipy/packages'
+    package_directory = download_directory + '/' + package_build.git_tag()
+    if os.path.isdir(package_directory):
+        return package_directory
+
+
 def prepare_resolved_requirements(resolved_requirements):
     package_paths = {}
     for package_name, package_build in resolved_requirements.items():
         if not package_build:
             continue
+        cached_path = find_package_in_cache(package_build)
+        if cached_path:
+            package_paths[package_name] = cached_path
+            print(f'Found {package_build.package_name} {package_build.git_tag()} in cache')
+            continue
+
         package_release = get_release(package_build)
         if package_release:
             assets = package_release.get_assets()
