@@ -24,6 +24,7 @@ setup(
             'lambdipy = lambdipy.cli:cli',
         ],
     },
+    data_files=[('releases', 'releases/*')],
     classifiers=[
         # As from http://pypi.python.org/pypi?%3Aaction=list_classifiers
         # 'Development Status :: 1 - Planning',
