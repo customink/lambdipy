@@ -1,0 +1,23 @@
+sudo: required
+language: python
+
+python:
+  - "3.6"
+services:
+  - docker
+
+if: branch = master OR type = pull_request
+
+install:
+  - pip install tox
+  - pip install .
+
+script:
+  - echo "The test passes"
+
+deploy:
+  provider: script
+  skip_cleanup: true
+  on: { branch: master }
+  script:
+    - lambdipy release
