@@ -134,6 +134,9 @@ def copy_prepared_releases_to_build_directory(package_paths, build_directory='./
 
 
 def _run_command_in_docker(command, build_directory):
+    with open(build_directory + '/passwd', "w") as f:
+        f.write(f'docker-build:x:{os.getuid()}:{os.getgid()}:docker-build,,,:/home:/bin/bash')
+
     auth_sock = os.environ['SSH_AUTH_SOCK']
     home = os.environ['HOME']
     ssh_dir = f'{home}/.ssh'
@@ -150,10 +153,10 @@ def _run_command_in_docker(command, build_directory):
             'bind': '/home/.ssh',
             'mode': 'ro'
         },
-        '/etc/passwd': {
+        f'{os.path.abspath(build_directory)}/passwd': {
             'bind': '/etc/passwd',
             'mode': 'ro'
-        },
+        }
     }
     environment = {
         'SSH_AUTH_SOCK': '/tmp/ssh_sock',
@@ -168,6 +171,7 @@ def _run_command_in_docker(command, build_directory):
         environment=environment,
         user=f'{os.getuid()}:{os.getgid()}'
     )
+    os.remove(build_directory + '/passwd')
 
 
 def install_non_resolved_requirements(resolved_requirements, requirements, install_deps=True, build_directory='./build'):
