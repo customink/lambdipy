@@ -21,3 +21,4 @@ deploy:
   on: { branch: master }
   script:
     - lambdipy release
+
