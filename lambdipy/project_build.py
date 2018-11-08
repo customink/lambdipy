@@ -177,19 +177,23 @@ def _run_command_in_docker(command, build_directory):
         'HOME': '/home'
     }
 
-    print(volumes)
-    print(environment)
-    print(f'{os.getuid()}:{os.getgid()}')
+    environment_string = ' '.join([f'-e {key}={value}' for key, value in environment.items()])
+    volumes_string = ' '.join([f'-v {key}:{value["bind"]}' for key, value in volumes.items()])
+    user_string = f'--user {os.getuid()}:{os.getgid()}'
 
-    docker_client = docker.from_env()
-    docker_client.containers.run(
-        'lambci/lambda:build-python3.6',
-        volumes=volumes,
-        command=command,
-        environment=environment,
-        user=f'{os.getuid()}:{os.getgid()}'
-    )
-    os.remove(build_directory + '/passwd')
+    # docker_client = docker.from_env()
+    # docker_client.containers.run(
+    #     'lambci/lambda:build-python3.6',
+    #     volumes=volumes,
+    #     command=command,
+    #     environment=environment,
+    #     user=f'{os.getuid()}:{os.getgid()}'
+    # )
+    docker_command = f'docker run {environment_string} {volumes_string} {user_string} -it lambci/lambda:build-python3.6 {command}'
+    print(docker_command)
+    with os.popen(docker_command) as subprocess:
+        print(subprocess.read())
+    # os.remove(build_directory + '/passwd')
 
 
 def install_non_resolved_requirements(resolved_requirements, requirements, build_directory='./build'):
@@ -207,11 +211,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, build
         f.writelines([
             '#!/bin/bash\n',
             'set -ex\n',
-            'echo $HOME\n',
-            'id -u\n',
-            'id -g\n',
-            'ls -la ~/.ssh\n',
-            # install_command + '\n',
+            install_command + '\n',
             'rm -rf /export/*.egg-info\n',
             'rm -rf /export/*.dist-info\n',
             'find /export/ -name tests | xargs rm -rf\n',
@@ -219,6 +219,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, build
         ])
     st = os.stat(build_directory + '/build')
     os.chmod(build_directory + '/build', st.st_mode | stat.S_IEXEC)
+    print(open(build_directory + '/build').read())
 
     _run_command_in_docker('/export/build', build_directory=build_directory)
 
