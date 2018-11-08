@@ -190,10 +190,10 @@ def _run_command_in_docker(command, build_directory):
     #     user=f'{os.getuid()}:{os.getgid()}'
     # )
     docker_command = f'docker run {environment_string} {volumes_string} {user_string} -it lambci/lambda:build-python3.6 {command}'
-    print(docker_command)
+    # print(docker_command)
     with os.popen(docker_command) as subprocess:
         print(subprocess.read())
-    # os.remove(build_directory + '/passwd')
+    os.remove(build_directory + '/passwd')
 
 
 def install_non_resolved_requirements(resolved_requirements, requirements, build_directory='./build'):
