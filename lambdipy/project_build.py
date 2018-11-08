@@ -177,8 +177,8 @@ def _run_command_in_docker(command, build_directory):
         'HOME': '/home'
     }
 
-    console.log(volumes)
-    console.log(environment)
+    print(volumes)
+    print(environment)
 
     docker_client = docker.from_env()
     docker_client.containers.run(
