@@ -207,6 +207,10 @@ def install_non_resolved_requirements(resolved_requirements, requirements, build
         f.writelines([
             '#!/bin/bash\n',
             'set -ex\n',
+            'echo $HOME\n',
+            'id -u\n',
+            'id -g\n',
+            'ls -la ~/.ssh\n',
             install_command + '\n',
             'rm -rf /export/*.egg-info\n',
             'rm -rf /export/*.dist-info\n',
