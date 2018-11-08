@@ -211,7 +211,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, build
             'id -u\n',
             'id -g\n',
             'ls -la ~/.ssh\n',
-            install_command + '\n',
+            # install_command + '\n',
             'rm -rf /export/*.egg-info\n',
             'rm -rf /export/*.dist-info\n',
             'find /export/ -name tests | xargs rm -rf\n',
