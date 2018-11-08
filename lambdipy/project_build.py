@@ -114,7 +114,8 @@ def prepare_resolved_requirements(resolved_requirements):
             print(f'Found {package_build.package_name} {package_build.git_tag()} in cache')
             continue
 
-        package_release = get_release(package_build)
+        use_token = os.environ.get('GITHUB_TOKEN') is not None
+        package_release = get_release(package_build, use_token)
         if package_release:
             assets = package_release.get_assets()
             if assets.totalCount == 0:
