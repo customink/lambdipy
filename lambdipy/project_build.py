@@ -179,6 +179,7 @@ def _run_command_in_docker(command, build_directory):
 
     print(volumes)
     print(environment)
+    print(f'{os.getuid()}:{os.getgid()}')
 
     docker_client = docker.from_env()
     docker_client.containers.run(
