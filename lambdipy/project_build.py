@@ -181,18 +181,17 @@ def _run_command_in_docker(command, build_directory):
     volumes_string = ' '.join([f'-v {key}:{value["bind"]}' for key, value in volumes.items()])
     user_string = f'--user {os.getuid()}:{os.getgid()}'
 
-    # docker_client = docker.from_env()
-    # docker_client.containers.run(
-    #     'lambci/lambda:build-python3.6',
-    #     volumes=volumes,
-    #     command=command,
-    #     environment=environment,
-    #     user=f'{os.getuid()}:{os.getgid()}'
-    # )
-    docker_command = f'docker run {environment_string} {volumes_string} {user_string} -it lambci/lambda:build-python3.6 {command}'
-    # print(docker_command)
-    with os.popen(docker_command) as subprocess:
-        print(subprocess.read())
+    docker_client = docker.from_env()
+    docker_client.containers.run(
+        'lambci/lambda:build-python3.6',
+        volumes=volumes,
+        command=command,
+        environment=environment,
+        user=f'{os.getuid()}:{os.getgid()}'
+    )
+    # docker_command = f'docker run {environment_string} {volumes_string} {user_string} -it lambci/lambda:build-python3.6 {command}'
+    # with os.popen(docker_command) as subprocess:
+    #     print(subprocess.read())
     os.remove(build_directory + '/passwd')
 
 
