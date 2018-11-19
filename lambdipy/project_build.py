@@ -151,29 +151,38 @@ def _run_command_in_docker(command, build_directory):
     with open(build_directory + '/passwd', "w") as f:
         f.write(f'docker-build:x:{os.getuid()}:{os.getgid()}:docker-build,,,:/home:/bin/bash')
 
-    auth_sock = os.environ['SSH_AUTH_SOCK']
-    home = os.environ['HOME']
-    ssh_dir = f'{home}/.ssh'
+    # auth_sock = os.environ['SSH_AUTH_SOCK']
+    # home = os.environ['HOME']
+    # ssh_dir = f'{home}/.ssh'
+    # volumes = {
+    #     f'{os.path.abspath(build_directory)}/': {
+    #         'bind': '/export/',
+    #         'mode': 'rw'
+    #     },
+    #     f'{auth_sock}': {
+    #         'bind': '/tmp/ssh_sock',
+    #         'mode': 'ro'
+    #     },
+    #     f'{ssh_dir}': {
+    #         'bind': '/home/.ssh',
+    #         'mode': 'ro'
+    #     },
+    #     f'{os.path.abspath(build_directory)}/passwd': {
+    #         'bind': '/etc/passwd',
+    #         'mode': 'ro'
+    #     }
+    # }
+    # environment = {
+    #     'SSH_AUTH_SOCK': '/tmp/ssh_sock',
+    #     'HOME': '/home'
+    # }
     volumes = {
-        f'{os.path.abspath(build_directory)}/': {
-            'bind': '/export/',
-            'mode': 'rw'
-        },
-        f'{auth_sock}': {
-            'bind': '/tmp/ssh_sock',
-            'mode': 'ro'
-        },
-        f'{ssh_dir}': {
-            'bind': '/home/.ssh',
-            'mode': 'ro'
-        },
-        f'{os.path.abspath(build_directory)}/passwd': {
-            'bind': '/etc/passwd',
-            'mode': 'ro'
-        }
+            f'{os.path.abspath(build_directory)}/': {
+                'bind': '/export/',
+                'mode': 'rw'
+            }
     }
     environment = {
-        'SSH_AUTH_SOCK': '/tmp/ssh_sock',
         'HOME': '/home'
     }
 
