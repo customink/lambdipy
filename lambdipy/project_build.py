@@ -3,6 +3,7 @@ import shutil
 import stat
 import tarfile
 import urllib
+import sys
 
 
 import docker
@@ -205,9 +206,11 @@ def _run_command_in_docker(command, build_directory):
     volumes_string = ' '.join([f'-v {key}:{value["bind"]}' for key, value in volumes.items()])
     user_string = f'--user {os.getuid()}:{os.getgid()}'
 
+    python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
+
     docker_client = docker.from_env()
     docker_client.containers.run(
-        'lambci/lambda:build-python3.6',
+        f'lambci/lambda:build-python{python_version}',
         volumes=volumes,
         command=command,
         environment=environment,

@@ -45,7 +45,7 @@ class PackageBuild:
         yum_dependencies_string = ' '.join(self.yum_dependencies())
         pypi_dependencies_string = ' '.join(map(lambda x: f'"{x[0]}{x[1]}"', self.pypi_dependencies()))
 
-        dockerfile_string = 'FROM lambci/lambda:build-python3.6\n'
+        dockerfile_string = f'FROM {self.build_container_image()}\n'
         dockerfile_string += 'RUN set -x && yum update\n'
         if len(self.yum_dependencies()) > 0:
             dockerfile_string += f'RUN set -x && yum -y install {yum_dependencies_string}\n'
@@ -58,6 +58,9 @@ class PackageBuild:
             dockerfile_string += '\n'.join(list(map(lambda x: f'RUN set -x && rm -rf prebuilt/{x}*', self.build_info.get('exclude-subpackages'))))
 
         return dockerfile_string
+
+    def build_container_image(self):
+        self.build_info.get('docker', {}).get('image', 'lambci/lambda:build-python3.6')
 
     def _no_binary_flag(self):
         allow_binaries = self.build_info.get('allow-binaries', False)

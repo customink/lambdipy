@@ -1,0 +1,19 @@
+{
+  "build-version": "0.0.1",
+  "allow-binaries": {
+    "except": false
+  },
+  "exclude-subpackages": [
+    "numpy"
+  ],
+  "dependencies": {
+    "yum": [],
+    "pypi": [
+      ["numpy", ">=1.14,<1.16"]
+    ]
+  },
+  "libs": [],
+  "docker": {
+    "image": "lambci/lambda:build-python2.7"
+  }
+}
