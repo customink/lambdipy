@@ -60,7 +60,7 @@ class PackageBuild:
         return dockerfile_string
 
     def build_container_image(self):
-        self.build_info.get('docker', {}).get('image', 'lambci/lambda:build-python3.6')
+        return self.build_info.get('docker', {}).get('image', 'lambci/lambda:build-python3.6')
 
     def _no_binary_flag(self):
         allow_binaries = self.build_info.get('allow-binaries', False)

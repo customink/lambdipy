@@ -71,6 +71,8 @@ def resolve_requirements(requirements, package_builds):
                     raise NoReleaseCandidate(requirement['requirement'])
 
     for name, requirement in resolved_requirements.copy().items():
+        if requirement is None:
+            continue
         for pypi_dep_name, pypi_dep_specifier in requirement.pypi_dependencies():
             if not pypi_dep_name in resolved_requirements:
                 candidates = list(reversed(sorted(package_builds[pypi_dep_name], key=lambda build: build.package_version)))
