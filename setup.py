@@ -2,12 +2,13 @@
 A tool for building and packaging python packages for AWS Lambda.
 """
 from setuptools import find_packages, setup
+from lambdipy import __version__ as version
 
 dependencies = ['click', 'pygithub', 'docker', 'requirementslib', 'pipenv']
 
 setup(
     name='lambdipy',
-    version='0.1.0',
+    version=version,
     url='https://github.com/adikus/lambdipy',
     license='BSD',
     author='Andrej Hoos',

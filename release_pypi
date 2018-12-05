@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# This will build the package and upload it to pypi
+# To make it work you need pipenv and twine installed
+# Also make sure your `~/.pypirc` file looks like this:
+# [distutils]
+# index-servers =
+#   pypi
+#   pypitest
+#
+# [pypi]
+# repository: https://pypi.org/legacy/
+# username: YOUR_USERNAME_GOES_HERE
+#
+# [pypitest]
+# repository: https://test.pypi.org/legacy/
+# username: YOUR_USERNAME_GOES_HERE
+
+rm -rf dist
+pipenv run python setup.py bdist_wheel
+twine upload -r pypi dist/lambdipy-*
