@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import tarfile
+import sys
 
 
 import docker
@@ -70,6 +71,9 @@ class PackageBuild:
 
     def git_tag(self):
         tag = f'{self.package_name}-{self.package_version}'
+        python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
+        if python_version != '3.6':
+            tag += f'-{python_version}'
         if self.config_version:
             tag += f'-{self.config_version}'
         tag += f'-{self.build_version}'
