@@ -69,6 +69,17 @@ def resolve_requirements(requirements, package_builds):
                 else:
                     raise NoReleaseCandidate(requirement['requirement'])
 
+    for name, requirement in resolved_requirements.copy().items():
+        for pypi_dep_name, pypi_dep_specifier in requirement.pypi_dependencies():
+            if not pypi_dep_name in resolved_requirements:
+                candidates = list(reversed(sorted(package_builds[pypi_dep_name], key=lambda build: build.package_version)))
+                requirement = _parse_requirement_line(''.join([pypi_dep_name, pypi_dep_specifier]))
+                predicate = lambda build: build.is_compatiple(requirement['requirement'], requirements)
+                selected_candidate = next(filter(predicate, candidates), None)
+                if selected_candidate == None:
+                    raise NoReleaseCandidate(requirement['requirement'])
+                resolved_requirements[pypi_dep_name] = selected_candidate
+
     return resolved_requirements
 
 
@@ -80,7 +91,7 @@ def prepare_tarfile(url, download_filename, package_directory):
 
 def download_and_prepare_asset(asset, package_release, package_build):
     url = asset.browser_download_url
-    download_directory = os.environ['HOME'] + '/.lambdipy/packages'
+    download_directory = os.environ['HOME'] + '/.lambdipy/packages/'
     os.makedirs(download_directory, exist_ok=True)
     print(f'Downloading {package_build.package_name} from GitHub release {package_release.tag_name}')
     download_filename = download_directory + os.path.basename(url)
@@ -97,7 +108,7 @@ def build_and_prepare_package(package_build):
 
 
 def find_package_in_cache(package_build):
-    download_directory = os.environ['HOME'] + '/.lambdipy/packages'
+    download_directory = os.environ['HOME'] + '/.lambdipy/packages/'
     package_directory = download_directory + '/' + package_build.git_tag()
     if os.path.isdir(package_directory):
         return package_directory
@@ -129,13 +140,17 @@ def prepare_resolved_requirements(resolved_requirements):
 # https://stackoverflow.com/a/12514470/6871665
 def _copytree(src, dest):
     os.makedirs(dest, exist_ok=True)
-    for item in os.listdir(src):
-        s = os.path.join(src, item)
-        d = os.path.join(dest, item)
-        if os.path.isdir(s):
-            shutil.copytree(s, d)
-        else:
-            shutil.copy2(s, d)
+    if not os.path.isdir(src):
+        shutil.copy2(src, dest)
+    else:
+        for item in os.listdir(src):
+            s = os.path.join(src, item)
+            d = os.path.join(dest, item)
+            if os.path.isdir(s):
+                if not os.path.isdir(d):
+                    shutil.copytree(s, d)
+            else:
+                shutil.copy2(s, d)
 
 
 def copy_prepared_releases_to_build_directory(package_paths, build_directory='./build'):
@@ -211,9 +226,11 @@ def install_non_resolved_requirements(resolved_requirements, requirements, build
             continue
         requirement_line = requirement['line']
         packages_to_install += f' "{requirement_line}"'
-    install_command = f'GIT_SSH_COMMAND="/usr/bin/ssh -o StrictHostKeyChecking=no" pip install {packages_to_install} -t /export'
+    # GIT_SSH_COMMAND="/usr/bin/ssh -o StrictHostKeyChecking=no"
+    install_command = f'pip install {packages_to_install} -t /export' if len(packages_to_install) > 0 else ''
 
-    print(f'Installing remaining packages via pip:{packages_to_install}')
+    if len(packages_to_install) > 0:
+        print(f'Installing remaining packages via pip:{packages_to_install}')
 
     with open(build_directory + '/build', "w") as f:
         f.writelines([
@@ -222,6 +239,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, build
             install_command + '\n',
             'rm -rf /export/*.egg-info\n',
             'rm -rf /export/*.dist-info\n',
+            'find /export/ -name __pycache__ | xargs rm -rf\n',
             'find /export/ -name tests | xargs rm -rf\n',
             'find /export/ -name "*.so" | xargs strip\n'
         ])

@@ -2,7 +2,6 @@
 A tool for building and packaging python packages for AWS Lambda.
 """
 from setuptools import find_packages, setup
-import glob
 
 dependencies = ['click', 'pygithub', 'docker', 'requirementslib', 'pipenv']
 

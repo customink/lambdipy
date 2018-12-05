@@ -50,8 +50,17 @@ class PackageBuild:
             dockerfile_string += f'RUN set -x && yum -y install {yum_dependencies_string}\n'
         if len(self.pypi_dependencies()) > 0:
             dockerfile_string += f'RUN set -x && pipenv run pip install {pypi_dependencies_string}\n'
-        dockerfile_string += f'RUN set -x && pipenv run pip install --no-binary {self.package_name} {self.package_name}=={self.package_version} -t prebuilt\n'
+
+        dockerfile_string += f'RUN set -x && pipenv run pip install {self._no_binary_flag()} {self.package_name}=={self.package_version} -t prebuilt\n'
+
+        if self.build_info.get('exclude-subpackages', False):
+            dockerfile_string += '\n'.join(list(map(lambda x: f'RUN set -x && rm -rf prebuilt/{x}*', self.build_info.get('exclude-subpackages'))))
+
         return dockerfile_string
+
+    def _no_binary_flag(self):
+        allow_binaries = self.build_info.get('allow-binaries', False)
+        return '' if allow_binaries else f'--no-binary {self.package_name}'
 
     def docker_tag(self):
         tag = f'lambdipy/{self.package_name}:{self.package_version}-{self.build_version}'
