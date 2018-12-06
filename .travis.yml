@@ -11,7 +11,7 @@ if: branch = master OR type = pull_request
 install:
   - pip install pip attrs -U
   - pip install .
-  - lambdipy release
+  - PYTHONUNBUFFERED=TRUE lambdipy release
 
 script:
   - echo "The test passes"
