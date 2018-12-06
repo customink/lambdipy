@@ -9,6 +9,7 @@ services:
 if: branch = master OR type = pull_request
 
 install:
+  - pip install pip -U
   - pip install .
   - lambdipy release
 
