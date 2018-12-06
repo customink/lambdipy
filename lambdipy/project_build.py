@@ -212,7 +212,6 @@ def _run_command_in_docker(command, build_directory):
         python_version = os.environ.get('PYTHON_VERSION')
     else:
         python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
-    print(python_version)
 
     docker_client = docker.from_env()
     docker_client.containers.run(

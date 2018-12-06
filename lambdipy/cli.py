@@ -2,6 +2,8 @@ import click
 from . import __version__
 import glob
 import os
+import sys
+
 
 from .package_build import PackageBuild, build_package_build_dict
 from .project_build import get_requirements_from_pipenv, parse_requirements, resolve_requirements
@@ -43,7 +45,12 @@ def build(from_pipenv, include):
     else:
         requirements = parse_requirements(open('requirements.txt').read())
 
-    release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
+    if os.environ.get('PYTHON_VERSION', False):
+        python_version = os.environ.get('PYTHON_VERSION')
+    else:
+        python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
+
+    release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'releases/**/**/build*python{python_version}*json')
     package_builds = build_package_build_dict(glob.glob(release_paths))
 
     try:
