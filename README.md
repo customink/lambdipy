@@ -2,7 +2,7 @@
 
 Lamdipy is a tool that allows packaging your python projects for the AWS Lambda environment.
 A lot of the popular python packages (like scipy, numpy or tensorflow) are fairly oversized which makes them a pain
-to fit into the AWS Lamda package.
+to fit into the AWS Lamda bundle.
 
 Lambdipy aims to help with that by providing prebuilt popular packages that are know to be 
 "problematic". 
@@ -12,6 +12,21 @@ You can install lambdipy from pypi:
 ```
 pip install lambdipy
 ```
+
+## Supported environments
+Python 2.7, 3.6 and 3.7 are all currently supported Lambda environments.
+
+## Features
+ * Automatically identify project requirements from your `requirements.txt` or pipenv environment
+ * Provide pre-built popular packages for the AWS Lambda environment in order to speed up your builds
+ * Automatically strips package binaries in order to make them as lean as possible
+ * [TODO] Provide tips and recipes on how to further improve your bundle size
+ 
+### What lambdipy isn't
+ * Lambdipy is not a deployment tool, for that you will have to look at something like 
+   https://github.com/serverless/serverless or https://github.com/awslabs/serverless-application-model
+ * Lambdipy is not a package manager. It can retrieve pre-built packages from our own GitHub releases, 
+   but do not expect any complicated requirement resolution capabilities. 
 
 ## Usage
 
