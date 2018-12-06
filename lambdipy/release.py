@@ -6,8 +6,8 @@ from github.GithubException import UnknownObjectException
 from github.GitRelease import GitRelease
 
 
-OWNER = os.environ.get('GIT_OWNER', 'adikus')
-REPO = os.environ.get('GIT_REPO', 'releases-test')
+OWNER = os.environ.get('GIT_OWNER', 'customink')
+REPO = os.environ.get('GIT_REPO', 'lambdipy')
 
 RELEASE_AUTHOR = os.environ.get('GIT_AUTHOR', 'adikus')
 RELEASE_AUTHOR_EMAIL = os.environ.get('GIT_AUTHOR_EMAIL', 'andrej.hoos@gmail.com')

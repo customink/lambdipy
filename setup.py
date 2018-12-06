@@ -9,7 +9,7 @@ dependencies = ['click', 'pygithub', 'docker', 'requirementslib', 'pipenv']
 setup(
     name='lambdipy',
     version=version,
-    url='https://github.com/adikus/lambdipy',
+    url='https://github.com/customink/lambdipy',
     license='BSD',
     author='Andrej Hoos',
     author_email='andrej.hoos@gmail.com',
