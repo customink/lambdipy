@@ -69,10 +69,8 @@ def build(from_pipenv, include):
 
 @cli.command()
 def release():
-    print('Releasing packages...')
     release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
     for path in glob.glob(release_paths):
-        print(path)
         package_build = PackageBuild(path)
         # print(open(path).read())
         # print(str(package_build))

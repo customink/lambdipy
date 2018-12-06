@@ -5,13 +5,14 @@ python:
   - "3.6"
 services:
   - docker
+env:
+  - PYTHONUNBUFFERED=TRUE
 
 if: branch = master OR type = pull_request
 
 install:
-  - pip install pip attrs -U
-  - pip install .
-  - PYTHONUNBUFFERED=TRUE lambdipy release
+  - pip install pipsi
+  - pipsi install .
 
 script:
   - echo "The test passes"
@@ -21,5 +22,4 @@ deploy:
   skip_cleanup: true
   on: { branch: master }
   script:
-    - lambdipy release
-
+    - travis_wait 30 lambdipy release
