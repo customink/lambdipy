@@ -196,7 +196,7 @@ def _run_command_in_docker(command, build_directory):
     # }
     volumes = {
             f'{os.path.abspath(build_directory)}/': {
-                'bind': '/export/',
+                'bind': '/tmp/export/',
                 'mode': 'rw'
             }
     }
@@ -208,7 +208,11 @@ def _run_command_in_docker(command, build_directory):
     volumes_string = ' '.join([f'-v {key}:{value["bind"]}' for key, value in volumes.items()])
     user_string = f'--user {os.getuid()}:{os.getgid()}'
 
-    python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
+    if os.environ.get('PYTHON_VERSION', False):
+        python_version = os.environ.get('PYTHON_VERSION')
+    else:
+        python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
+    print(python_version)
 
     docker_client = docker.from_env()
     docker_client.containers.run(
@@ -232,7 +236,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, build
         requirement_line = requirement['line']
         packages_to_install += f' "{requirement_line}"'
     # GIT_SSH_COMMAND="/usr/bin/ssh -o StrictHostKeyChecking=no"
-    install_command = f'pip install {packages_to_install} -t /export' if len(packages_to_install) > 0 else ''
+    install_command = f'pip install {packages_to_install} -t /tmp/export' if len(packages_to_install) > 0 else ''
 
     if len(packages_to_install) > 0:
         print(f'Installing remaining packages via pip:{packages_to_install}')
@@ -242,17 +246,17 @@ def install_non_resolved_requirements(resolved_requirements, requirements, build
             '#!/bin/bash\n',
             'set -ex\n',
             install_command + '\n',
-            'rm -rf /export/*.egg-info\n',
-            'rm -rf /export/*.dist-info\n',
-            'find /export/ -name __pycache__ | xargs rm -rf\n',
-            'find /export/ -name tests | xargs rm -rf\n',
-            'find /export/ -name "*.so" | xargs strip\n'
+            'rm -rf /tmp/export/*.egg-info\n',
+            'rm -rf /tmp/export/*.dist-info\n',
+            'find /tmp/export/ -name __pycache__ | xargs rm -rf\n',
+            'find /tmp/export/ -name tests | xargs rm -rf\n',
+            'find /tmp/export/ -name "*.so" | xargs strip\n'
         ])
     st = os.stat(build_directory + '/build')
     os.chmod(build_directory + '/build', st.st_mode | stat.S_IEXEC)
     print(open(build_directory + '/build').read())
 
-    _run_command_in_docker('/export/build', build_directory=build_directory)
+    _run_command_in_docker('/tmp/export/build', build_directory=build_directory)
 
     print('Finalizing the build')
     os.remove(build_directory + '/build')

@@ -56,7 +56,6 @@ class PackageBuild:
 
         if self.build_info.get('exclude-subpackages', False):
             dockerfile_string += '\n'.join(list(map(lambda x: f'RUN set -x && rm -rf prebuilt/{x}*', self.build_info.get('exclude-subpackages'))))
-
         return dockerfile_string
 
     def build_container_image(self):
@@ -74,9 +73,6 @@ class PackageBuild:
 
     def git_tag(self):
         tag = f'{self.package_name}-{self.package_version}'
-        python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
-        if python_version != '3.6':
-            tag += f'-{python_version}'
         if self.config_version:
             tag += f'-{self.config_version}'
         tag += f'-{self.build_version}'
@@ -102,7 +98,7 @@ class PackageBuild:
     def _docker_volumes(self):
         return {
             f'{self.build_directory()}/': {
-                'bind': '/export/',
+                'bind': '/tmp/export/',
                 'mode': 'rw'
             }
         }
@@ -119,10 +115,10 @@ class PackageBuild:
         shutil.rmtree(self.build_directory(), ignore_errors=True)
         os.makedirs(self.build_directory(), exist_ok=True)
 
-        self._run_command_in_docker('bash -c "cp -r prebuilt/* /export/"')
+        self._run_command_in_docker('bash -c "cp -r prebuilt/* /tmp/export/"')
         if len(self.libs_to_copy()) > 0:
             os.mkdir(f'{self.build_directory()}/lib')
-            self._run_command_in_docker(f'bash -c "cp ' + ' '.join(self.libs_to_copy()) + ' /export/lib"')
+            self._run_command_in_docker(f'bash -c "cp ' + ' '.join(self.libs_to_copy()) + ' /tmp/export/lib"')
 
     def create_compressed_tarball(self):
         home = os.environ['HOME']
