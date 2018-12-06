@@ -28,6 +28,17 @@ Python 2.7, 3.6 and 3.7 are all currently supported Lambda environments.
  * Lambdipy is not a package manager. It can retrieve pre-built packages from our own GitHub releases, 
    but do not expect any complicated requirement resolution capabilities. 
 
+## Supported packages
+ * numpy
+ * scipy
+ * scikit-learn (needs only numpy and scipy to be prebuilt)
+ * pillow
+ * scikit-image (needs only pillow and scipy to be prebuilt)
+ * tensorflow (experimental)
+
+If you want to request a new version of the above to be supported or even an entirely new package, 
+please create and issue or a pull request.
+
 ## Usage
 
 Build packages defined by your `requirements.txt` into a `./build` diretory:
