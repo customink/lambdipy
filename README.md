@@ -5,7 +5,7 @@ A lot of the popular python packages (like scipy, numpy or tensorflow) are fairl
 to fit into the AWS Lamda bundle.
 
 Lambdipy aims to help with that by providing prebuilt popular packages that are know to be 
-"problematic". 
+oversized or otherwise difficult to deploy. 
 
 ## Installation
 You can install lambdipy from pypi:
