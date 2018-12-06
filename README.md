@@ -30,7 +30,15 @@ lambdipy build --from-pipenv
 Build packages and also directly copy your scripts / modules into the `./build` directory:
 ```
 lambdipy build -i your_script.py -i your_module
-``` 
+```
+
+### Usage notes:
+ * The build process currently requires docker.
+   This will most likely change in the future.
+ * The prebuilt packages are downloaded from GitHub using its API. If you see a rate limit error 
+ (which you will definitely see on shared build environments like Travis, you can specify a
+ `GITHUB_TOKEN` environmental variable containing a token generated at https://github.com/settings/tokens - 
+ only the "Access public repositories" scope is needed) 
 
 ## Examples
 //TODO
