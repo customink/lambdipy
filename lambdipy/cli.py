@@ -5,6 +5,9 @@ import os
 import sys
 
 
+from docker.errors import BuildError
+
+
 from .package_build import PackageBuild, build_package_build_dict
 from .project_build import get_requirements_from_pipenv, parse_requirements, resolve_requirements
 from .project_build import prepare_resolved_requirements, copy_prepared_releases_to_build_directory
@@ -83,11 +86,14 @@ def release():
         # print(str(package_build))
         print(f'Checking whether {package_build} is released')
         if not get_release(package_build, use_token=True):
-            print(f'{package_build} not released, building...')
-            package_build.build_docker()
-            package_build.copy_from_docker()
-            print(f'Built {package_build} inside {package_build.build_directory()}')
-            print('Releasing...')
-            release_package(package_build)
+            try:
+                print(f'{package_build} not released, building...')
+                package_build.build_docker()
+                package_build.copy_from_docker()
+                print(f'Built {package_build} inside {package_build.build_directory()}')
+                print('Releasing...')
+                release_package(package_build)
+            except BuildError as e:
+                print(e, e.build_log)
         else:
             print(f'{package_build} already released, skipping...')

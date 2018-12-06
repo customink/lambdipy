@@ -6,7 +6,6 @@ import os
 import re
 import shutil
 import tarfile
-import sys
 
 
 import docker
