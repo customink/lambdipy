@@ -39,6 +39,11 @@ Python 2.7, 3.6 and 3.7 are all currently supported Lambda environments.
 If you want to request a new version of the above to be supported or even an entirely new package, 
 please create and issue or a pull request.
 
+## Examples
+
+ * MNIST digit classifier with scikit-learn & scikit-image
+    https://github.com/represent/skimage-mnist-example
+
 ## Usage
 
 Build packages defined by your `requirements.txt` into a `./build` diretory:
@@ -65,6 +70,3 @@ lambdipy build -i your_script.py -i your_module
  (which you will definitely see on shared build environments like Travis, you can specify a
  `GITHUB_TOKEN` environmental variable containing a token generated at https://github.com/settings/tokens - 
  only the "Access public repositories" scope is needed) 
-
-## Examples
-//TODO
