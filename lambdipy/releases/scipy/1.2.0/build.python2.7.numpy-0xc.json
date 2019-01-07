@@ -1,0 +1,30 @@
+{
+  "build-version": "0.0.1",
+  "dependencies": {
+    "yum": [
+      "atlas-devel",
+      "atlas-sse3-devel",
+      "blas-devel",
+      "findutils",
+      "gcc",
+      "gcc-c++",
+      "lapack-devel"
+    ],
+    "pypi": [
+      ["numpy", ">=1.14,<1.16"]
+    ]
+  },
+  "libs": [
+    "/usr/lib64/atlas/libptf77blas.so.3",
+    "/usr/lib64/atlas/libf77blas.so.3",
+    "/usr/lib64/atlas/libcblas.so.3",
+    "/usr/lib64/atlas/libptcblas.so.3",
+    "/usr/lib64/atlas/libatlas.so.3",
+    "/usr/lib64/atlas/liblapack.so.3",
+    "/usr/lib64/libquadmath.so.0",
+    "/usr/lib64/libgfortran.so.3"
+  ],
+  "docker": {
+    "image": "lambci/lambda:build-python2.7"
+  }
+}
