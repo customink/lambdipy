@@ -1,0 +1,14 @@
+{
+  "build-version": "0.0.1",
+  "dependencies": {
+    "yum": [],
+    "pypi": [
+      ["numpy", ">=1.16,<1.17"]
+    ]
+  },
+  "libs": [
+  ],
+  "docker": {
+    "image": "lambci/lambda:build-python3.6"
+  }
+}
