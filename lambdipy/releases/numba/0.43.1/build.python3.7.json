@@ -1,9 +1,10 @@
 {
   "build-version": "0.0.1",
   "dependencies": {
-    "yum": [
-      "llvmlite"
-    ]
+    "yum": [],
+    "pypi": [
+        ["llvmlite", ">=0.28"]
+      ]
   },
   "libs": [
   ],
