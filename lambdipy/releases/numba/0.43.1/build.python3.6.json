@@ -1,0 +1,13 @@
+{
+  "build-version": "0.0.1",
+  "dependencies": {
+    "yum": [
+      "llvmlite"
+    ]
+  },
+  "libs": [
+  ],
+  "docker": {
+    "image": "lambci/lambda:build-python3.6"
+  }
+}
