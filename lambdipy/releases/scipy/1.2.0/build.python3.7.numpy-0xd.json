@@ -1,30 +1,30 @@
 {
-  "build-version": "0.0.1",
+  "build-version": "0.0.2",
   "dependencies": {
     "yum": [
       "atlas-devel",
-      "atlas-sse3-devel",
       "blas-devel",
+      "lapack-devel",
       "findutils",
       "gcc",
-      "gcc-c++",
-      "lapack-devel"
+      "gcc-c++"
     ],
     "pypi": [
       ["numpy", ">=1.16,<1.17"]
-    ]
+    ],
+    "setup_python": {
+      "pipenv": "2018.11.26",
+      "python": "3.7.3",
+      "home": "/root",
+      "workdir": "/tmp"
+    }
   },
   "libs": [
-    "/usr/lib64/atlas/libptf77blas.so.3",
-    "/usr/lib64/atlas/libf77blas.so.3",
-    "/usr/lib64/atlas/libcblas.so.3",
-    "/usr/lib64/atlas/libptcblas.so.3",
-    "/usr/lib64/atlas/libatlas.so.3",
-    "/usr/lib64/atlas/liblapack.so.3",
+    "/usr/lib64/atlas/libtatlas.so.3",
     "/usr/lib64/libquadmath.so.0",
-    "/usr/lib64/libgfortran.so.3"
+    "/usr/lib64/libgfortran.so.4"
   ],
   "docker": {
-    "image": "lambci/lambda:build-python3.7"
+    "image": "amazonlinux:2"
   }
 }

@@ -37,6 +37,9 @@ class PackageBuild:
     def pypi_dependencies(self):
         return self.build_info['dependencies'].get('pypi', [])
 
+    def python_setup(self):
+        return self.build_info['dependencies'].get('setup_python', {})
+
     def libs_to_copy(self):
         return self.build_info.get('libs', [])
 
@@ -45,9 +48,27 @@ class PackageBuild:
         pypi_dependencies_string = ' '.join(map(lambda x: f'"{x[0]}{x[1]}"', self.pypi_dependencies()))
 
         dockerfile_string = f'FROM {self.build_container_image()}\n'
+
+        if self.python_setup():
+            workdir = self.python_setup().get('workdir', '/root')
+            yum_dependencies_string += f' python3 python3-devel which git tar gcc make zlib-devel bzip2-devel readline-devel openssl-devel libffi-devel'
+            dockerfile_string += f'WORKDIR {workdir}\n'
+
         dockerfile_string += 'RUN set -x && yum update -y\n'
         if len(self.yum_dependencies()) > 0:
             dockerfile_string += f'RUN set -x && yum -y install {yum_dependencies_string}\n'
+        if self.python_setup():
+            pipenv_version = self.python_setup().get('pipenv', '2018.11.26')
+            python_version = self.python_setup().get('python', '3.6')
+            home = self.python_setup().get('home', '/root')
+            dockerfile_string += f'RUN set -x && pip3 install "pipenv=={pipenv_version}"\n'
+            dockerfile_string += f'RUN set -x && git clone https://github.com/pyenv/pyenv.git ~/.pyenv\n'
+            dockerfile_string += f'ENV PYENV_ROOT="{home}/.pyenv"\n'
+            dockerfile_string += 'ENV PATH="$PYENV_ROOT/bin:$PATH"\n'
+            dockerfile_string += 'RUN set -x && eval "$(pyenv init -)"\n'
+            dockerfile_string += f'RUN set -x && pyenv install {python_version}\n'
+            dockerfile_string += 'RUN set -x && touch Pipfile\n'
+            dockerfile_string += f'RUN set -x && pipenv --python {python_version}\n'
         if len(self.pypi_dependencies()) > 0:
             dockerfile_string += f'RUN set -x && pipenv run pip install {pypi_dependencies_string}\n'
 
