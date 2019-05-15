@@ -86,7 +86,8 @@ def build(from_pipenv, include):
 @click.argument('package')
 @click.option('--tag', '-t')
 @click.option('--verbose', '-v', is_flag=True)
-def prepare(package, tag, verbose):
+@click.option('--release', '-r', is_flag=True)
+def prepare(package, tag, verbose, release):
     release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
     package_path = next((path for path in glob.glob(release_paths) if package in path and (tag is None or tag in path)), None)
     package_build = PackageBuild(package_path)
@@ -95,6 +96,9 @@ def prepare(package, tag, verbose):
         package_build.build_docker(verbose=verbose)
         package_build.copy_from_docker()
         print(f'Built {package_build} inside {package_build.build_directory()}')
+        if release:
+            print('Releasing...')
+            release_package(package_build)
     except BuildError as e:
         print(e)
         for log in e.build_log:

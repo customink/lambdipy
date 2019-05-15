@@ -9,6 +9,9 @@
       "gcc",
       "gcc-c++"
     ],
+    "commands": [
+      "yum downgrade -y http://packages.us-west-1.amazonaws.com/2018.03/main/c31535f74c6e/x86_64/Packages/libquadmath-6.4.1-1.45.amzn1.x86_64.rpm"
+    ],
     "pypi": [
       ["numpy", ">=1.16,<1.17"]
     ],

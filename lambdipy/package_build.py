@@ -37,8 +37,11 @@ class PackageBuild:
     def pypi_dependencies(self):
         return self.build_info['dependencies'].get('pypi', [])
 
+    def command_dependencies(self):
+        return self.build_info['dependencies'].get('commands', None)
+
     def python_setup(self):
-        return self.build_info['dependencies'].get('setup_python', {})
+        return self.build_info['dependencies'].get('setup_python', None)
 
     def libs_to_copy(self):
         return self.build_info.get('libs', [])
@@ -49,7 +52,7 @@ class PackageBuild:
 
         dockerfile_string = f'FROM {self.build_container_image()}\n'
 
-        if self.python_setup():
+        if self.python_setup() is not None:
             workdir = self.python_setup().get('workdir', '/root')
             yum_dependencies_string += f' python3 python3-devel which git tar gcc make zlib-devel bzip2-devel readline-devel openssl-devel libffi-devel'
             dockerfile_string += f'WORKDIR {workdir}\n'
@@ -57,7 +60,10 @@ class PackageBuild:
         dockerfile_string += 'RUN set -x && yum update -y\n'
         if len(self.yum_dependencies()) > 0:
             dockerfile_string += f'RUN set -x && yum -y install {yum_dependencies_string}\n'
-        if self.python_setup():
+        if self.command_dependencies() is not None:
+            for command in self.command_dependencies():
+                dockerfile_string += f'RUN set -x && {command}\n'
+        if self.python_setup() is not None:
             pipenv_version = self.python_setup().get('pipenv', '2018.11.26')
             python_version = self.python_setup().get('python', '3.6')
             home = self.python_setup().get('home', '/root')
