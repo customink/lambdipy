@@ -80,18 +80,26 @@ def build(from_pipenv, include):
 @cli.command()
 @click.argument('package')
 @click.option('--tag', '-t')
-def build(package, tag):
+@click.option('--verbose', '-v', is_flag=True)
+def build(package, tag, verbose):
     release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
     package_path = next((path for path in glob.glob(release_paths) if package in path and (tag is None or tag in path)), None)
     package_build = PackageBuild(package_path)
     print(f'Building {package_build}...')
-    package_build.build_docker()
-    package_build.copy_from_docker()
-    print(f'Built {package_build} inside {package_build.build_directory()}')
+    try:
+        package_build.build_docker(verbose=verbose)
+        package_build.copy_from_docker()
+        print(f'Built {package_build} inside {package_build.build_directory()}')
+    except BuildError as e:
+        print(e)
+        for log in e.build_log:
+            if 'stream' in log:
+                print(log['stream'], end='')
 
 
 @cli.command()
-def release():
+@click.option('--verbose', '-v', is_flag=True)
+def release(verbose):
     release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
     for path in glob.glob(release_paths):
         package_build = PackageBuild(path)
@@ -101,13 +109,16 @@ def release():
         if not get_release(package_build, use_token=True):
             try:
                 print(f'{package_build} not released, building...')
-                package_build.build_docker()
+                package_build.build_docker(verbose=verbose)
                 package_build.copy_from_docker()
                 print(f'Built {package_build} inside {package_build.build_directory()}')
                 print('Releasing...')
                 release_package(package_build)
             except BuildError as e:
-                print(e, e.build_log)
+                print(e)
+                for log in e.build_log:
+                    if 'stream' in log:
+                        print(log['stream'], end='')
         else:
             print(f'{package_build} already released, skipping...')
 

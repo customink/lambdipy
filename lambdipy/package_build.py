@@ -45,7 +45,7 @@ class PackageBuild:
         pypi_dependencies_string = ' '.join(map(lambda x: f'"{x[0]}{x[1]}"', self.pypi_dependencies()))
 
         dockerfile_string = f'FROM {self.build_container_image()}\n'
-        dockerfile_string += 'RUN set -x && yum update\n'
+        dockerfile_string += 'RUN set -x && yum update -y\n'
         if len(self.yum_dependencies()) > 0:
             dockerfile_string += f'RUN set -x && yum -y install {yum_dependencies_string}\n'
         if len(self.pypi_dependencies()) > 0:
