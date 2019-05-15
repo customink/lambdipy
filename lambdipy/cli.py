@@ -78,6 +78,19 @@ def build(from_pipenv, include):
 
 
 @cli.command()
+@click.argument('package')
+@click.option('--tag', '-t')
+def build(package, tag):
+    release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
+    package_path = next((path for path in glob.glob(release_paths) if package in path and (tag is None or tag in path)), None)
+    package_build = PackageBuild(package_path)
+    print(f'Building {package_build}...')
+    package_build.build_docker()
+    package_build.copy_from_docker()
+    print(f'Built {package_build} inside {package_build.build_directory()}')
+
+
+@cli.command()
 def release():
     release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
     for path in glob.glob(release_paths):
@@ -97,3 +110,6 @@ def release():
                 print(e, e.build_log)
         else:
             print(f'{package_build} already released, skipping...')
+
+if __name__ == '__main__':
+    cli()
