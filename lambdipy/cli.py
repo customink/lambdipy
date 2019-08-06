@@ -42,7 +42,8 @@ def version():
 @cli.command()
 @click.option('--from-pipenv', '-p', is_flag=True, help='Build dependencies from Pipfile.lock')
 @click.option('--include', '-i', multiple=True, help='Include these paths in the final build')
-def build(from_pipenv, include):
+@click.option('--exclude-tests', '-t', multiple=True, help='Exclude deletions of tests for these packages')
+def build(from_pipenv, include, exclude_tests):
     if from_pipenv:
         requirements = parse_requirements(get_requirements_from_pipenv())
     else:
