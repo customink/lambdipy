@@ -227,7 +227,7 @@ def _run_command_in_docker(command, build_directory):
     os.remove(build_directory + '/passwd')
 
 
-def install_non_resolved_requirements(resolved_requirements, requirements, build_directory='./build'):
+def install_non_resolved_requirements(resolved_requirements, requirements, exclude_tests=None, build_directory='./build'):
     packages_to_install = ''
     for requirement in requirements:
         if resolved_requirements[requirement['requirement'].name] is not None:
@@ -240,6 +240,8 @@ def install_non_resolved_requirements(resolved_requirements, requirements, build
     if len(packages_to_install) > 0:
         print(f'Installing remaining packages via pip:{packages_to_install}')
 
+    exclude_tests_grep = '\|'.join(exclude_tests) if exclude_tests else '*'
+
     with open(build_directory + '/build', "w") as f:
         f.writelines([
             '#!/bin/bash\n',
@@ -248,7 +250,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, build
             'rm -rf /tmp/export/*.egg-info\n',
             'rm -rf /tmp/export/*.dist-info\n',
             'find /tmp/export/ -name __pycache__ | xargs rm -rf\n',
-            'find /tmp/export/ -name tests | xargs rm -rf\n',
+            f'find /tmp/export/ -name tests | grep -v "{exclude_tests_grep}" | xargs rm -rf\n',
             'find /tmp/export/ -name "*.so" | xargs strip\n'
         ])
     st = os.stat(build_directory + '/build')
