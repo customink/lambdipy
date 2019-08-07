@@ -240,7 +240,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, keep_
     if len(packages_to_install) > 0:
         print(f'Installing remaining packages via pip:{packages_to_install}')
 
-    exclude_tests_grep = '\|'.join(keep_tests) if keep_tests else '*'
+    exclude_tests_pattern = '\|'.join(keep_tests) if keep_tests else '*'
 
     with open(build_directory + '/build', "w") as f:
         f.writelines([
@@ -250,7 +250,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, keep_
             'rm -rf /tmp/export/*.egg-info\n',
             'rm -rf /tmp/export/*.dist-info\n',
             'find /tmp/export/ -name __pycache__ | xargs rm -rf\n',
-            f'find /tmp/export/ -name tests | grep -v "{exclude_tests_grep}" | xargs rm -rf\n',
+            f'find /tmp/export/ -name tests | grep -v "{exclude_tests_pattern}" | xargs rm -rf\n',
             'find /tmp/export/ -name "*.so" | xargs strip\n'
         ])
     st = os.stat(build_directory + '/build')
