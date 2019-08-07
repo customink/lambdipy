@@ -42,8 +42,8 @@ def version():
 @cli.command()
 @click.option('--from-pipenv', '-p', is_flag=True, help='Build dependencies from Pipfile.lock')
 @click.option('--include', '-i', multiple=True, help='Include these paths in the final build')
-@click.option('--exclude-tests', '-t', multiple=True, help='Exclude deletions of tests for these packages')
-def build(from_pipenv, include, exclude_tests):
+@click.option('--keep-tests', '-t', multiple=True, help='Exclude deletions of tests for these packages')
+def build(from_pipenv, include, keep_tests):
     if from_pipenv:
         requirements = parse_requirements(get_requirements_from_pipenv())
     else:
@@ -61,7 +61,7 @@ def build(from_pipenv, include, exclude_tests):
         resolved_requirements = resolve_requirements(requirements, package_builds)
         package_paths = prepare_resolved_requirements(resolved_requirements)
         copy_prepared_releases_to_build_directory(package_paths)
-        install_non_resolved_requirements(resolved_requirements, requirements, exclude_tests)
+        install_non_resolved_requirements(resolved_requirements, requirements, keep_tests)
         copy_include_paths(include)
         print('Build done')
 

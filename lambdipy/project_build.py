@@ -227,7 +227,7 @@ def _run_command_in_docker(command, build_directory):
     os.remove(build_directory + '/passwd')
 
 
-def install_non_resolved_requirements(resolved_requirements, requirements, exclude_tests=None, build_directory='./build'):
+def install_non_resolved_requirements(resolved_requirements, requirements, keep_tests=None, build_directory='./build'):
     packages_to_install = ''
     for requirement in requirements:
         if resolved_requirements[requirement['requirement'].name] is not None:
@@ -240,7 +240,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, exclu
     if len(packages_to_install) > 0:
         print(f'Installing remaining packages via pip:{packages_to_install}')
 
-    exclude_tests_grep = '\|'.join(exclude_tests) if exclude_tests else '*'
+    exclude_tests_grep = '\|'.join(keep_tests) if keep_tests else '*'
 
     with open(build_directory + '/build', "w") as f:
         f.writelines([
