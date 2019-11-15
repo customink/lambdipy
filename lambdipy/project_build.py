@@ -4,7 +4,7 @@ import stat
 import tarfile
 import urllib
 import sys
-
+import subprocess
 
 import docker
 from requirementslib import Requirement
@@ -227,7 +227,9 @@ def _run_command_in_docker(command, build_directory):
     os.remove(build_directory + '/passwd')
 
 
-def install_non_resolved_requirements(resolved_requirements, requirements, keep_tests=None, build_directory='./build'):
+def install_non_resolved_requirements(resolved_requirements, requirements, keep_tests=None, no_docker=False,
+                                      build_directory='./build'):
+    install_dir = build_directory if no_docker else '/tmp/export'
     packages_to_install = ''
     for requirement in requirements:
         if resolved_requirements[requirement['requirement'].name] is not None:
@@ -235,7 +237,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, keep_
         requirement_line = requirement['line']
         packages_to_install += f' "{requirement_line}"'
     # GIT_SSH_COMMAND="/usr/bin/ssh -o StrictHostKeyChecking=no"
-    install_command = f'pip install {packages_to_install} -t /tmp/export' if len(packages_to_install) > 0 else ''
+    install_command = f'pip install {packages_to_install} -t {install_dir}' if len(packages_to_install) > 0 else ''
 
     if len(packages_to_install) > 0:
         print(f'Installing remaining packages via pip:{packages_to_install}')
@@ -247,17 +249,21 @@ def install_non_resolved_requirements(resolved_requirements, requirements, keep_
             '#!/bin/bash\n',
             'set -ex\n',
             install_command + '\n',
-            'rm -rf /tmp/export/*.egg-info\n',
-            'rm -rf /tmp/export/*.dist-info\n',
-            'find /tmp/export/ -name __pycache__ | xargs rm -rf\n',
-            f'find /tmp/export/ -name tests | grep -v "{exclude_tests_pattern}" | xargs rm -rf\n',
-            'find /tmp/export/ -name "*.so" | xargs strip\n'
+            f'rm -rf {install_dir}/*.egg-info\n',
+            f'rm -rf {install_dir}/*.dist-info\n',
+            f'find {install_dir}/ -name __pycache__ | xargs rm -rf\n',
+            f'find {install_dir}/ -name tests | grep -v "{exclude_tests_pattern}" | xargs rm -rf\n',
+            f'find {install_dir}/ -name "*.so" | xargs strip\n'
         ])
     st = os.stat(build_directory + '/build')
     os.chmod(build_directory + '/build', st.st_mode | stat.S_IEXEC)
     print(open(build_directory + '/build').read())
 
-    _run_command_in_docker('/tmp/export/build', build_directory=build_directory)
+    if no_docker:
+        print("Running without docker ...")
+        subprocess.Popen([build_directory + '/build'])
+    else:
+        _run_command_in_docker(f'{install_dir}/build', build_directory=build_directory)
 
     print('Finalizing the build')
     os.remove(build_directory + '/build')
