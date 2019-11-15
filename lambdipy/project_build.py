@@ -261,7 +261,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, keep_
 
     if no_docker:
         print("Running without docker ...")
-        subprocess.Popen([build_directory + '/build'])
+        subprocess.Popen([build_directory + '/build']).wait()
     else:
         _run_command_in_docker(f'{install_dir}/build', build_directory=build_directory)
 
