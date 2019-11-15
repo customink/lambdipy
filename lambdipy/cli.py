@@ -43,7 +43,9 @@ def version():
 @click.option('--from-pipenv', '-p', is_flag=True, help='Build dependencies from Pipfile.lock')
 @click.option('--include', '-i', multiple=True, help='Include these paths in the final build')
 @click.option('--keep-tests', '-t', multiple=True, help='Exclude deletions of tests for these packages')
-def build(from_pipenv, include, keep_tests):
+@click.option('--no-docker', '-x', is_flag=True, help='Do not use Docker for package build (lambdipy itself runs in '
+                                                      'lambci/lambda:build-python{PYTHON_VERSION} container)')
+def build(from_pipenv, include, keep_tests, no_docker):
     if from_pipenv:
         requirements = parse_requirements(get_requirements_from_pipenv())
     else:
@@ -61,7 +63,7 @@ def build(from_pipenv, include, keep_tests):
         resolved_requirements = resolve_requirements(requirements, package_builds)
         package_paths = prepare_resolved_requirements(resolved_requirements)
         copy_prepared_releases_to_build_directory(package_paths)
-        install_non_resolved_requirements(resolved_requirements, requirements, keep_tests)
+        install_non_resolved_requirements(resolved_requirements, requirements, keep_tests, no_docker)
         copy_include_paths(include)
         print('Build done')
 
