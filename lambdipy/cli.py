@@ -63,7 +63,7 @@ def build(from_pipenv, include, keep_tests, no_docker):
         resolved_requirements = resolve_requirements(requirements, package_builds)
         package_paths = prepare_resolved_requirements(resolved_requirements)
         copy_prepared_releases_to_build_directory(package_paths)
-        install_non_resolved_requirements(resolved_requirements, requirements, keep_tests, no_docker)
+        install_non_resolved_requirements(resolved_requirements, requirements, python_version, keep_tests, no_docker)
         copy_include_paths(include)
         print('Build done')
 

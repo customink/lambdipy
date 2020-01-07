@@ -168,35 +168,7 @@ def copy_prepared_releases_to_build_directory(package_paths, build_directory='./
             _copytree(directory + '/' + item, build_directory + '/' + os.path.basename(item))
 
 
-def _run_command_in_docker(command, build_directory):
-    # with open(build_directory + '/passwd', "w") as f:
-    #     f.write(f'docker-build:x:{os.getuid()}:{os.getgid()}:docker-build,,,:/home:/bin/bash')
-
-    # auth_sock = os.environ['SSH_AUTH_SOCK']
-    # home = os.environ['HOME']
-    # ssh_dir = f'{home}/.ssh'
-    # volumes = {
-    #     f'{os.path.abspath(build_directory)}/': {
-    #         'bind': '/export/',
-    #         'mode': 'rw'
-    #     },
-    #     f'{auth_sock}': {
-    #         'bind': '/tmp/ssh_sock',
-    #         'mode': 'ro'
-    #     },
-    #     f'{ssh_dir}': {
-    #         'bind': '/home/.ssh',
-    #         'mode': 'ro'
-    #     },
-    #     f'{os.path.abspath(build_directory)}/passwd': {
-    #         'bind': '/etc/passwd',
-    #         'mode': 'ro'
-    #     }
-    # }
-    # environment = {
-    #     'SSH_AUTH_SOCK': '/tmp/ssh_sock',
-    #     'HOME': '/home'
-    # }
+def _run_command_in_docker(command, build_directory, python_version):
     volumes = {
             f'{os.path.abspath(build_directory)}/': {
                 'bind': '/tmp/export/',
@@ -206,15 +178,6 @@ def _run_command_in_docker(command, build_directory):
     environment = {
         'HOME': '/home'
     }
-
-    environment_string = ' '.join([f'-e {key}={value}' for key, value in environment.items()])
-    volumes_string = ' '.join([f'-v {key}:{value["bind"]}' for key, value in volumes.items()])
-    user_string = f'--user {os.getuid()}:{os.getgid()}'
-
-    if os.environ.get('PYTHON_VERSION', False):
-        python_version = os.environ.get('PYTHON_VERSION')
-    else:
-        python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
 
     cli = docker.APIClient()
     container = cli.create_container(
@@ -235,13 +198,9 @@ def _run_command_in_docker(command, build_directory):
 
     cli.kill(container.get('Id'))
     cli.remove_container(container.get('Id'))
-    # docker_command = f'docker run {environment_string} {volumes_string} {user_string} -it lambci/lambda:build-python3.6 {command}'
-    # with os.popen(docker_command) as subprocess:
-    #     print(subprocess.read())
-    # os.remove(build_directory + '/passwd')
 
 
-def install_non_resolved_requirements(resolved_requirements, requirements, keep_tests=None, no_docker=False,
+def install_non_resolved_requirements(resolved_requirements, requirements, python_version, keep_tests=None, no_docker=False,
                                       build_directory='./build'):
     install_dir = build_directory if no_docker else '/tmp/export'
     pypi_packages_to_install = ''
@@ -288,7 +247,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, keep_
             exit(return_code)
     else:
         print("Installing in a docker container...")
-        _run_command_in_docker(f'{install_dir}/build', build_directory=build_directory)
+        _run_command_in_docker(f'{install_dir}/build', build_directory=build_directory, python_version=python_version)
 
     print('Finalizing the build')
     os.remove(build_directory + '/build')
