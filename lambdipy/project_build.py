@@ -180,6 +180,11 @@ def _run_command_in_docker(command, build_directory, python_version):
     }
 
     cli = docker.APIClient()
+
+    pull_generator = cli.pull(f'lambci/lambda:build-python{python_version}', stream=True)
+    for line in pull_generator:
+        print(line.decode('utf-8'), end='')
+
     container = cli.create_container(
         f'lambci/lambda:build-python{python_version}',
         volumes=list(map(lambda x: x['bind'], volumes.values())),
