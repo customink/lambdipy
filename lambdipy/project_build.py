@@ -203,22 +203,16 @@ def _run_command_in_docker(command, build_directory, python_version):
 def install_non_resolved_requirements(resolved_requirements, requirements, python_version, keep_tests=None, no_docker=False,
                                       build_directory='./build'):
     install_dir = build_directory if no_docker else '/tmp/export'
-    pypi_packages_to_install = ''
-    http_packages_to_install = ''
+    packages_to_install = ''
     for requirement in requirements:
         if resolved_requirements[requirement['requirement'].name] is not None:
             continue
         requirement_line = requirement['line']
-        if 'http' not in requirement_line:
-            pypi_packages_to_install += f' "{requirement_line}"'
-        else:
-            http_packages_to_install += f' "{requirement_line}"'
+        packages_to_install += f' "{requirement_line}"'
     # GIT_SSH_COMMAND="/usr/bin/ssh -o StrictHostKeyChecking=no"
-    pypi_install_command = f'pip install {pypi_packages_to_install} -t {install_dir} --no-deps' if len(pypi_packages_to_install) > 0 else ''
-    # Pypi does not give us all dependencies for http packages, so we need to rely on pip to install those
-    http_install_command = f'pip install {http_packages_to_install} -t {install_dir}' if len(http_packages_to_install) > 0 else ''
+    install_command = f'pip install {packages_to_install} -t {install_dir}' if len(packages_to_install) > 0 else ''
 
-    if len(pypi_packages_to_install) + len(http_packages_to_install) > 0:
+    if len(packages_to_install) > 0:
         print(f'Installing remaining packages via pip')
 
     exclude_tests_pattern = '\|'.join(keep_tests) if keep_tests else '*'
@@ -227,8 +221,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, pytho
         f.writelines([
             '#!/bin/bash\n',
             'set -ex\n',
-            pypi_install_command + '\n',
-            http_install_command + '\n',
+            install_command + '\n',
             f'rm -rf {install_dir}/*.egg-info\n',
             f'rm -rf {install_dir}/*.dist-info\n',
             f'find {install_dir}/ -name __pycache__ | xargs rm -rf\n',
