@@ -1,13 +1,14 @@
+import json
 import os
 import shutil
 import stat
 import tarfile
 import urllib
-import sys
 import subprocess
 
 import docker
 from requirementslib import Requirement
+from tqdm import tqdm
 
 
 from .release import get_release
@@ -181,12 +182,30 @@ def _run_command_in_docker(command, build_directory, python_version):
 
     cli = docker.APIClient()
 
-    pull_generator = cli.pull(f'lambci/lambda:build-python{python_version}', stream=True)
-    for line in pull_generator:
-        print(line.decode('utf-8'), end='')
+    image_tag = f'build-python{python_version}'
+    image = f'lambci/lambda:{image_tag}'
+
+    progress_bars = {}
+    pull_generator = cli.pull(image, stream=True)
+    for line in (line for output in pull_generator for line in output.decode().split('\n') if len(line) > 0):
+        progress_dict = json.loads(line)
+
+        if 'id' not in progress_dict or progress_dict['id'] == image_tag:
+            print(progress_dict)
+        elif progress_dict['id'] in progress_bars:
+            progress_bar = progress_bars[progress_dict['id']]
+            progress_detail = progress_dict['progressDetail']
+
+            if 'current' in progress_detail:
+                progress_bar.update(progress_detail['current'] - progress_bar.n)
+            if 'total' in progress_detail and progress_detail['total'] != progress_bar.total:
+                progress_bar.reset(progress_detail['total'])
+            progress_bar.set_description(progress_dict['id'] + ' | ' + progress_dict['status'])
+        else:
+            progress_bars[progress_dict['id']] = tqdm(desc=progress_dict['id'] + ' | ' + progress_dict['status'])
 
     container = cli.create_container(
-        f'lambci/lambda:build-python{python_version}',
+        image,
         volumes=list(map(lambda x: x['bind'], volumes.values())),
         host_config=cli.create_host_config(binds=volumes),
         command='sleep infinity',

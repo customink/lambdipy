@@ -4,7 +4,7 @@ A tool for building and packaging python packages for AWS Lambda.
 from setuptools import find_packages, setup
 from lambdipy import __version__ as version
 
-dependencies = ['click', 'pygithub', 'docker', 'requirementslib', 'pipenv']
+dependencies = ['click', 'pygithub', 'docker', 'requirementslib', 'pipenv', 'tqdm']
 
 setup(
     name='lambdipy',
