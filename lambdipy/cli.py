@@ -78,7 +78,7 @@ def build(from_pipenv, include, keep_tests, no_docker):
         for candidate in e.potential_candidates:
             print(f'{candidate.git_tag()} {candidate.pypi_dependencies()}')
         print('If you believe this combination of requirements should be available, please open an issue on GitHub')
-    except DockerException as e:
+    except BuildError as e:
         print(e.msg)
         for log in e.build_log:
             if 'stream' in log:

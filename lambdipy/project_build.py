@@ -18,10 +18,12 @@ class NoReleaseCandidate(Exception):
         super(NoReleaseCandidate, self).__init__()
         self.requirement = requirement
 
+
 class NoReleaseAsset(Exception):
     def __init__(self, package_build):
         super(NoReleaseAsset, self).__init__()
         self.package_build = package_build
+
 
 class ReleaseRequirementsMissmatched(Exception):
     def __init__(self, requirement, potential_candidates):
@@ -31,8 +33,8 @@ class ReleaseRequirementsMissmatched(Exception):
 
 
 def get_requirements_from_pipenv():
-    with os.popen("pipenv lock -r") as subprocess:
-        return subprocess.read()
+    with os.popen("pipenv lock -r") as pipenv_subprocess:
+        return pipenv_subprocess.read()
 
 
 def _parse_requirement_line(line):
@@ -91,6 +93,7 @@ def prepare_tarfile(url, download_filename, package_directory):
     tar = tarfile.open(download_filename, "r:gz")
     tar.extractall(package_directory)
     tar.close()
+
 
 def download_and_prepare_asset(asset, package_release, package_build):
     url = asset.browser_download_url
@@ -166,8 +169,8 @@ def copy_prepared_releases_to_build_directory(package_paths, build_directory='./
 
 
 def _run_command_in_docker(command, build_directory):
-    with open(build_directory + '/passwd', "w") as f:
-        f.write(f'docker-build:x:{os.getuid()}:{os.getgid()}:docker-build,,,:/home:/bin/bash')
+    # with open(build_directory + '/passwd', "w") as f:
+    #     f.write(f'docker-build:x:{os.getuid()}:{os.getgid()}:docker-build,,,:/home:/bin/bash')
 
     # auth_sock = os.environ['SSH_AUTH_SOCK']
     # home = os.environ['HOME']
@@ -213,34 +216,51 @@ def _run_command_in_docker(command, build_directory):
     else:
         python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
 
-    docker_client = docker.from_env()
-    docker_client.containers.run(
+    cli = docker.APIClient()
+    container = cli.create_container(
         f'lambci/lambda:build-python{python_version}',
-        volumes=volumes,
-        command=command,
+        volumes=list(map(lambda x: x['bind'], volumes.values())),
+        host_config=cli.create_host_config(binds=volumes),
+        command='sleep infinity',
         environment=environment,
         user=f'{os.getuid()}:{os.getgid()}'
     )
+    cli.start(container=container.get('Id'))
+
+    command_exec = cli.exec_create(container=container.get('Id'), cmd=command)
+    command_runtime = cli.exec_start(exec_id=command_exec.get('Id'), stream=True)
+
+    for line in command_runtime:
+        print(line.decode('utf-8'), end='')
+
+    cli.kill(container.get('Id'))
+    cli.remove_container(container.get('Id'))
     # docker_command = f'docker run {environment_string} {volumes_string} {user_string} -it lambci/lambda:build-python3.6 {command}'
     # with os.popen(docker_command) as subprocess:
     #     print(subprocess.read())
-    os.remove(build_directory + '/passwd')
+    # os.remove(build_directory + '/passwd')
 
 
 def install_non_resolved_requirements(resolved_requirements, requirements, keep_tests=None, no_docker=False,
                                       build_directory='./build'):
     install_dir = build_directory if no_docker else '/tmp/export'
-    packages_to_install = ''
+    pypi_packages_to_install = ''
+    http_packages_to_install = ''
     for requirement in requirements:
         if resolved_requirements[requirement['requirement'].name] is not None:
             continue
         requirement_line = requirement['line']
-        packages_to_install += f' "{requirement_line}"'
+        if 'http' not in requirement_line:
+            pypi_packages_to_install += f' "{requirement_line}"'
+        else:
+            http_packages_to_install += f' "{requirement_line}"'
     # GIT_SSH_COMMAND="/usr/bin/ssh -o StrictHostKeyChecking=no"
-    install_command = f'pip install {packages_to_install} -t {install_dir}' if len(packages_to_install) > 0 else ''
+    pypi_install_command = f'pip install {pypi_packages_to_install} -t {install_dir} --no-deps' if len(pypi_packages_to_install) > 0 else ''
+    # Pypi does not give us all dependencies for http packages, so we need to rely on pip to install those
+    http_install_command = f'pip install {http_packages_to_install} -t {install_dir}' if len(http_packages_to_install) > 0 else ''
 
-    if len(packages_to_install) > 0:
-        print(f'Installing remaining packages via pip:{packages_to_install}')
+    if len(pypi_packages_to_install) + len(http_packages_to_install) > 0:
+        print(f'Installing remaining packages via pip')
 
     exclude_tests_pattern = '\|'.join(keep_tests) if keep_tests else '*'
 
@@ -248,7 +268,8 @@ def install_non_resolved_requirements(resolved_requirements, requirements, keep_
         f.writelines([
             '#!/bin/bash\n',
             'set -ex\n',
-            install_command + '\n',
+            pypi_install_command + '\n',
+            http_install_command + '\n',
             f'rm -rf {install_dir}/*.egg-info\n',
             f'rm -rf {install_dir}/*.dist-info\n',
             f'find {install_dir}/ -name __pycache__ | xargs rm -rf\n',
@@ -260,12 +281,13 @@ def install_non_resolved_requirements(resolved_requirements, requirements, keep_
     print(open(build_directory + '/build').read())
 
     if no_docker:
-        print("Running without docker ...")
+        print("Installing without docker...")
         return_code = subprocess.Popen([build_directory + '/build']).wait()
         if return_code != 0:
             print("Error in building lambdipy build.")
             exit(return_code)
     else:
+        print("Installing in a docker container...")
         _run_command_in_docker(f'{install_dir}/build', build_directory=build_directory)
 
     print('Finalizing the build')
