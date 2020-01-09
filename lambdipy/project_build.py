@@ -1,13 +1,14 @@
+import json
 import os
 import shutil
 import stat
 import tarfile
 import urllib
-import sys
 import subprocess
 
 import docker
 from requirementslib import Requirement
+from tqdm import tqdm
 
 
 from .release import get_release
@@ -18,10 +19,12 @@ class NoReleaseCandidate(Exception):
         super(NoReleaseCandidate, self).__init__()
         self.requirement = requirement
 
+
 class NoReleaseAsset(Exception):
     def __init__(self, package_build):
         super(NoReleaseAsset, self).__init__()
         self.package_build = package_build
+
 
 class ReleaseRequirementsMissmatched(Exception):
     def __init__(self, requirement, potential_candidates):
@@ -31,8 +34,8 @@ class ReleaseRequirementsMissmatched(Exception):
 
 
 def get_requirements_from_pipenv():
-    with os.popen("pipenv lock -r") as subprocess:
-        return subprocess.read()
+    with os.popen("pipenv lock -r") as pipenv_subprocess:
+        return pipenv_subprocess.read()
 
 
 def _parse_requirement_line(line):
@@ -91,6 +94,7 @@ def prepare_tarfile(url, download_filename, package_directory):
     tar = tarfile.open(download_filename, "r:gz")
     tar.extractall(package_directory)
     tar.close()
+
 
 def download_and_prepare_asset(asset, package_release, package_build):
     url = asset.browser_download_url
@@ -165,35 +169,7 @@ def copy_prepared_releases_to_build_directory(package_paths, build_directory='./
             _copytree(directory + '/' + item, build_directory + '/' + os.path.basename(item))
 
 
-def _run_command_in_docker(command, build_directory):
-    with open(build_directory + '/passwd', "w") as f:
-        f.write(f'docker-build:x:{os.getuid()}:{os.getgid()}:docker-build,,,:/home:/bin/bash')
-
-    # auth_sock = os.environ['SSH_AUTH_SOCK']
-    # home = os.environ['HOME']
-    # ssh_dir = f'{home}/.ssh'
-    # volumes = {
-    #     f'{os.path.abspath(build_directory)}/': {
-    #         'bind': '/export/',
-    #         'mode': 'rw'
-    #     },
-    #     f'{auth_sock}': {
-    #         'bind': '/tmp/ssh_sock',
-    #         'mode': 'ro'
-    #     },
-    #     f'{ssh_dir}': {
-    #         'bind': '/home/.ssh',
-    #         'mode': 'ro'
-    #     },
-    #     f'{os.path.abspath(build_directory)}/passwd': {
-    #         'bind': '/etc/passwd',
-    #         'mode': 'ro'
-    #     }
-    # }
-    # environment = {
-    #     'SSH_AUTH_SOCK': '/tmp/ssh_sock',
-    #     'HOME': '/home'
-    # }
+def _run_command_in_docker(command, build_directory, python_version):
     volumes = {
             f'{os.path.abspath(build_directory)}/': {
                 'bind': '/tmp/export/',
@@ -204,30 +180,51 @@ def _run_command_in_docker(command, build_directory):
         'HOME': '/home'
     }
 
-    environment_string = ' '.join([f'-e {key}={value}' for key, value in environment.items()])
-    volumes_string = ' '.join([f'-v {key}:{value["bind"]}' for key, value in volumes.items()])
-    user_string = f'--user {os.getuid()}:{os.getgid()}'
+    cli = docker.APIClient()
 
-    if os.environ.get('PYTHON_VERSION', False):
-        python_version = os.environ.get('PYTHON_VERSION')
-    else:
-        python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
+    image_tag = f'build-python{python_version}'
+    image = f'lambci/lambda:{image_tag}'
 
-    docker_client = docker.from_env()
-    docker_client.containers.run(
-        f'lambci/lambda:build-python{python_version}',
-        volumes=volumes,
-        command=command,
+    progress_bars = {}
+    pull_generator = cli.pull(image, stream=True)
+    for line in (line for output in pull_generator for line in output.decode().split('\n') if len(line) > 0):
+        progress_dict = json.loads(line)
+
+        if 'id' not in progress_dict or progress_dict['id'] == image_tag:
+            print(progress_dict)
+        elif progress_dict['id'] in progress_bars:
+            progress_bar = progress_bars[progress_dict['id']]
+            progress_detail = progress_dict['progressDetail']
+
+            if 'current' in progress_detail:
+                progress_bar.update(progress_detail['current'] - progress_bar.n)
+            if 'total' in progress_detail and progress_detail['total'] != progress_bar.total:
+                progress_bar.reset(progress_detail['total'])
+            progress_bar.set_description(progress_dict['id'] + ' | ' + progress_dict['status'])
+        else:
+            progress_bars[progress_dict['id']] = tqdm(desc=progress_dict['id'] + ' | ' + progress_dict['status'])
+
+    container = cli.create_container(
+        image,
+        volumes=list(map(lambda x: x['bind'], volumes.values())),
+        host_config=cli.create_host_config(binds=volumes),
+        command='sleep infinity',
         environment=environment,
         user=f'{os.getuid()}:{os.getgid()}'
     )
-    # docker_command = f'docker run {environment_string} {volumes_string} {user_string} -it lambci/lambda:build-python3.6 {command}'
-    # with os.popen(docker_command) as subprocess:
-    #     print(subprocess.read())
-    os.remove(build_directory + '/passwd')
+    cli.start(container=container.get('Id'))
+
+    command_exec = cli.exec_create(container=container.get('Id'), cmd=command)
+    command_runtime = cli.exec_start(exec_id=command_exec.get('Id'), stream=True)
+
+    for line in command_runtime:
+        print(line.decode('utf-8'), end='')
+
+    cli.kill(container.get('Id'))
+    cli.remove_container(container.get('Id'))
 
 
-def install_non_resolved_requirements(resolved_requirements, requirements, keep_tests=None, no_docker=False,
+def install_non_resolved_requirements(resolved_requirements, requirements, python_version, keep_tests=None, no_docker=False,
                                       build_directory='./build'):
     install_dir = build_directory if no_docker else '/tmp/export'
     packages_to_install = ''
@@ -240,7 +237,7 @@ def install_non_resolved_requirements(resolved_requirements, requirements, keep_
     install_command = f'pip install {packages_to_install} -t {install_dir}' if len(packages_to_install) > 0 else ''
 
     if len(packages_to_install) > 0:
-        print(f'Installing remaining packages via pip:{packages_to_install}')
+        print(f'Installing remaining packages via pip')
 
     exclude_tests_pattern = '\|'.join(keep_tests) if keep_tests else '*'
 
@@ -260,13 +257,14 @@ def install_non_resolved_requirements(resolved_requirements, requirements, keep_
     print(open(build_directory + '/build').read())
 
     if no_docker:
-        print("Running without docker ...")
+        print("Installing without docker...")
         return_code = subprocess.Popen([build_directory + '/build']).wait()
         if return_code != 0:
             print("Error in building lambdipy build.")
             exit(return_code)
     else:
-        _run_command_in_docker(f'{install_dir}/build', build_directory=build_directory)
+        print("Installing in a docker container...")
+        _run_command_in_docker(f'{install_dir}/build', build_directory=build_directory, python_version=python_version)
 
     print('Finalizing the build')
     os.remove(build_directory + '/build')
