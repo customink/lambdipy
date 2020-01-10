@@ -38,7 +38,7 @@ def get_requirements_from_pipenv(dev):
         command = "{ pipenv lock --dev -r & pipenv lock -r; }"
     else:
         command = "pipenv lock -r"
-    with os.popen(command) as subprocess:
+    with os.popen(command) as pipenv_subprocess:
         return pipenv_subprocess.read()
 
 
