@@ -214,14 +214,15 @@ def _run_command_in_docker(command, build_directory, python_version):
     )
     cli.start(container=container.get('Id'))
 
-    command_exec = cli.exec_create(container=container.get('Id'), cmd=command)
-    command_runtime = cli.exec_start(exec_id=command_exec.get('Id'), stream=True)
+    try:
+        command_exec = cli.exec_create(container=container.get('Id'), cmd=command)
+        command_runtime = cli.exec_start(exec_id=command_exec.get('Id'), stream=True)
 
-    for line in command_runtime:
-        print(line.decode('utf-8'), end='')
-
-    cli.kill(container.get('Id'))
-    cli.remove_container(container.get('Id'))
+        for line in command_runtime:
+            print(line.decode('utf-8'), end='')
+    finally:
+        cli.kill(container.get('Id'))
+        cli.remove_container(container.get('Id'))
 
 
 def install_non_resolved_requirements(resolved_requirements, requirements, python_version, keep_tests=None, no_docker=False,
