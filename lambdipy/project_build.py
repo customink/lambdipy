@@ -33,8 +33,12 @@ class ReleaseRequirementsMissmatched(Exception):
         self.potential_candidates = potential_candidates
 
 
-def get_requirements_from_pipenv():
-    with os.popen("pipenv lock -r") as pipenv_subprocess:
+def get_requirements_from_pipenv(dev):
+    if dev:
+        command = "{ pipenv lock --dev -r & pipenv lock -r; }"
+    else:
+        command = "pipenv lock -r"
+    with os.popen(command) as pipenv_subprocess:
         return pipenv_subprocess.read()
 
 

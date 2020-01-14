@@ -41,13 +41,15 @@ def version():
 
 @cli.command()
 @click.option('--from-pipenv', '-p', is_flag=True, help='Build dependencies from Pipfile.lock')
+@click.option('--dev', '-d', is_flag=True, help='If dependencies are built from Pipfile.lock, include development '
+                                                'dependencies as well.')
 @click.option('--include', '-i', multiple=True, help='Include these paths in the final build')
 @click.option('--keep-tests', '-t', multiple=True, help='Exclude deletions of tests for these packages')
 @click.option('--no-docker', '-x', is_flag=True, help='Do not use Docker for package build (lambdipy itself runs in '
                                                       'lambci/lambda:build-python{PYTHON_VERSION} container)')
-def build(from_pipenv, include, keep_tests, no_docker):
+def build(from_pipenv, dev, include, keep_tests, no_docker):
     if from_pipenv:
-        requirements = parse_requirements(get_requirements_from_pipenv())
+        requirements = parse_requirements(get_requirements_from_pipenv(dev))
     else:
         requirements = parse_requirements(open('requirements.txt').read())
 
