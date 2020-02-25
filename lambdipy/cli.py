@@ -111,7 +111,8 @@ def prepare(package, tag, verbose, release):
 
 @cli.command()
 @click.option('--verbose', '-v', is_flag=True)
-def release(verbose):
+@click.option('--dry-run', is_flag=True)
+def release(verbose, dry_run):
     release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
     for path in glob.glob(release_paths):
         package_build = PackageBuild(path)
@@ -124,8 +125,11 @@ def release(verbose):
                 package_build.build_docker(verbose=verbose)
                 package_build.copy_from_docker()
                 print(f'Built {package_build} inside {package_build.build_directory()}')
-                print('Releasing...')
-                release_package(package_build)
+                if not dry_run:
+                    print('Releasing...')
+                    release_package(package_build)
+                else:
+                    print('This is a dry run, not releasing...')
             except BuildError as e:
                 print(e)
                 for log in e.build_log:
