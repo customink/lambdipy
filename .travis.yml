@@ -27,6 +27,6 @@ deploy:
   provider: script
   skip_cleanup: true
   on: { branch: master }
-  script:
-    - ./travis_wait -i 10 "lambdipy release -v" release.out
-    - cat release.out
+  script: |
+    ./travis_wait -i 10 "lambdipy release -v" release.out
+    cat release.out
