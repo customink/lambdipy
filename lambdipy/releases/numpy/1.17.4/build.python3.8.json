@@ -12,14 +12,9 @@
     ]
   },
   "libs": [
-    "/usr/lib64/atlas/libptf77blas.so.3",
-    "/usr/lib64/atlas/libf77blas.so.3",
-    "/usr/lib64/atlas/libcblas.so.3",
-    "/usr/lib64/atlas/libptcblas.so.3",
-    "/usr/lib64/atlas/libatlas.so.3",
-    "/usr/lib64/atlas/liblapack.so.3",
+    "/usr/lib64/atlas/libtatlas.so.3",
     "/usr/lib64/libquadmath.so.0",
-    "/usr/lib64/libgfortran.so.3"
+    "/usr/lib64/libgfortran.so.4"
   ],
   "docker": {
     "image": "lambci/lambda:build-python3.8"
