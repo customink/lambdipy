@@ -21,9 +21,10 @@ install:
   - pip install pipsi
   - pipsi install .
 
-script: |
-  if [[ $TRAVIS_BRANCH == 'master' ]]
-    lambdipy release -v --parallel-index $CI_NODE_INDEX --parallel-total $CI_NODE_TOTAL
-  else
-    lambdipy release -v --dry-run --parallel-index $CI_NODE_INDEX --parallel-total $CI_NODE_TOTAL
-  fi
+script:
+  - |
+    if [[ $TRAVIS_BRANCH == 'master' ]]
+      lambdipy release -v --parallel-index $CI_NODE_INDEX --parallel-total $CI_NODE_TOTAL
+    else
+      lambdipy release -v --dry-run --parallel-index $CI_NODE_INDEX --parallel-total $CI_NODE_TOTAL
+    fi
