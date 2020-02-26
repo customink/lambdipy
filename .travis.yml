@@ -21,11 +21,9 @@ install:
   - pip install pipsi
   - pipsi install .
 
-script:
-  - '[ "$TRAVIS_PULL_REQUEST" != "false" ] && lambdipy release -v --dry-run --parallel-index $CI_NODE_INDEX --parallel-total $CI_NODE_TOTAL'
-
-deploy:
-  provider: script
-  skip_cleanup: true
-  on: { branch: master }
-  script: lambdipy release -v --parallel-index $CI_NODE_INDEX --parallel-total $CI_NODE_TOTAL
+script: |
+  if [[ $TRAVIS_BRANCH == 'master' ]]
+    [ "$TRAVIS_PULL_REQUEST" != "false" ] && lambdipy release -v --parallel-index $CI_NODE_INDEX --parallel-total $CI_NODE_TOTAL
+  else
+    [ "$TRAVIS_PULL_REQUEST" != "false" ] && lambdipy release -v --dry-run --parallel-index $CI_NODE_INDEX --parallel-total $CI_NODE_TOTAL
+  fi
