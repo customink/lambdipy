@@ -19,9 +19,14 @@ install:
 script:
   - echo "The test passes"
 
+after_success: |
+  [ "$TRAVIS_PULL_REQUEST" != "false" ] && ./travis_wait -i 10 "lambdipy release -v --dry-run" release.out
+  cat release.out
+
 deploy:
   provider: script
   skip_cleanup: true
   on: { branch: master }
-  script:
-    - ./travis_wait -i 10 "lambdipy release -v" release.out && cat release.out
+  script: |
+    ./travis_wait -i 10 "lambdipy release -v" release.out
+    cat release.out
