@@ -115,10 +115,15 @@ def prepare(package, tag, verbose, release):
 @click.option('--verbose', '-v', is_flag=True)
 @click.option('--dry-run', is_flag=True)
 @click.option('--filter', '-f')
-def release(verbose, dry_run, filter):
+@click.option('--parallel-index')
+@click.option('--parallel-total')
+def release(verbose, dry_run, filter, parallel_index, parallel_total):
     release_paths = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'releases/**/**/build*.json')
-    for path in glob.glob(release_paths):
+    for i, path in enumerate(sorted(glob.glob(release_paths))):
         if filter is not None and filter not in path:
+            continue
+
+        if parallel_index is not None and parallel_total is not None and i % int(parallel_total) != int(parallel_index):
             continue
 
         package_build = PackageBuild(path)

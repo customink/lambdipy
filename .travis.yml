@@ -6,7 +6,14 @@ python:
 services:
   - docker
 env:
-  - PYTHONUNBUFFERED=TRUE
+  global:
+    - PYTHONUNBUFFERED=TRUE
+    - CI_NODE_TOTAL=4
+  jobs:
+    - CI_NODE_INDEX=0
+    - CI_NODE_INDEX=1
+    - CI_NODE_INDEX=2
+    - CI_NODE_INDEX=3
 
 if: branch = master OR type = pull_request
 
@@ -15,12 +22,10 @@ install:
   - pipsi install .
 
 script:
-  - echo "The test passes"
-
-after_success: '[ "$TRAVIS_PULL_REQUEST" != "false" ] && lambdipy release -v --dry-run'
+  - '[ "$TRAVIS_PULL_REQUEST" != "false" ] && lambdipy release -v --dry-run --parallel-index $CI_NODE_INDEX --parallel-total $CI_NODE_TOTAL'
 
 deploy:
   provider: script
   skip_cleanup: true
   on: { branch: master }
-  script: lambdipy release -v
+  script: lambdipy release -v --parallel-index $CI_NODE_INDEX --parallel-total $CI_NODE_TOTAL
