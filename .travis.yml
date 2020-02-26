@@ -13,20 +13,14 @@ if: branch = master OR type = pull_request
 install:
   - pip install pipsi
   - pipsi install .
-  - wget https://raw.githubusercontent.com/m3t/travis_wait/master/travis_wait
-  - chmod +x ./travis_wait
 
 script:
   - echo "The test passes"
 
-after_success: |
-  [ "$TRAVIS_PULL_REQUEST" != "false" ] && ./travis_wait -i 10 "lambdipy release -v --dry-run" release.out
-  cat release.out
+after_success: [ "$TRAVIS_PULL_REQUEST" != "false" ] && lambdipy release -v --dry-run
 
 deploy:
   provider: script
   skip_cleanup: true
   on: { branch: master }
-  script: |
-    ./travis_wait -i 10 "lambdipy release -v" release.out
-    cat release.out
+  script: lambdipy release -v

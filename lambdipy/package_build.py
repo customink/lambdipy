@@ -110,9 +110,25 @@ class PackageBuild:
             print(self._dockerfile())
 
         dockerfile = io.BytesIO(bytes(self._dockerfile(), encoding='utf-8'))
-        image, logs = self.docker_client.images.build(fileobj=dockerfile, tag=self.docker_tag())
-        if verbose:
-            print(''.join([log['stream'] for log in logs if 'stream' in log]))
+
+        cli = docker.APIClient()
+        build_runtime = cli.build(fileobj=dockerfile, tag=self.docker_tag(), pull=True, rm=True)
+        print(f'Building docker image {self.docker_tag()}')
+        line_buffer = ''
+        for line in (line for chunk in build_runtime for line in chunk.decode('utf-8').split('\n') if len(line) > 0):
+            if verbose:
+                line_buffer += line
+                try:
+                    decoded_line = json.loads(line_buffer)
+                    line_buffer = ''
+                except json.decoder.JSONDecodeError:
+                    continue
+                if 'stream' not in decoded_line:
+                    continue
+                print(decoded_line['stream'], end='')
+            else:
+                print('.', end='')
+        print()
 
     def build_directory(self):
         home = os.environ['HOME']
