@@ -1,11 +1,14 @@
 {
-  "build-version": "0.0.1",
+  "build-version": "0.0.2",
   "dependencies": {
     "yum": [
       "libjpeg-devel",
       "zlib-devel"
     ]
   },
+  "libs": [
+    "/usr/lib64/libjpeg.so.62"
+  ],
   "docker": {
     "image": "lambci/lambda:build-python3.8"
   }
