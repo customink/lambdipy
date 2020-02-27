@@ -1,0 +1,34 @@
+{
+  "build-version": "0.0.2",
+  "dependencies": {
+    "yum": [
+      "atlas-devel",
+      "blas-devel",
+      "lapack-devel",
+      "findutils",
+      "gcc",
+      "gcc-c++"
+    ],
+    "commands": [
+      "yum downgrade -y http://packages.us-west-1.amazonaws.com/2018.03/main/c31535f74c6e/x86_64/Packages/libquadmath-6.4.1-1.45.amzn1.x86_64.rpm"
+    ],
+    "pypi": [
+      ["numpy", ">=1.14,<1.16"]
+    ],
+    "setup_python": {
+      "pipenv": "2018.11.26",
+      "python": "3.7.3",
+      "home": "/root",
+      "workdir": "/tmp"
+    }
+  },
+  "libs": [
+    "/usr/lib64/atlas/libtatlas.so.3",
+    "/usr/lib64/libquadmath.so.0",
+    "/usr/lib64/libgfortran.so.4"
+  ],
+  "docker": {
+    "image": "amazonlinux:2"
+  }
+}
+
