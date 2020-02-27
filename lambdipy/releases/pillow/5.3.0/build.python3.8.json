@@ -1,9 +1,8 @@
 {
-  "build-version": "0.0.2",
+  "build-version": "0.0.3",
   "dependencies": {
     "yum": [
-      "libjpeg-devel",
-      "zlib-devel"
+      "libjpeg-devel"
     ]
   },
   "libs": [
