@@ -42,6 +42,15 @@ def get_requirements_from_pipenv(dev):
         return pipenv_subprocess.read()
 
 
+def get_requirements_from_poetry(dev):
+    if dev:
+        command = "poetry export --dev -f requirements.txt --without-hashes"
+    else:
+        command = "poetry export -f requirements.txt --without-hashes"
+    with os.popen(command) as pipenv_subprocess:
+        return pipenv_subprocess.read()
+
+
 def _parse_requirement_line(line):
     if len(line) == 0:
         return None
