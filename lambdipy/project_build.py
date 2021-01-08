@@ -45,6 +45,8 @@ def get_requirements_from_pipenv(dev):
 def _parse_requirement_line(line):
     if len(line) == 0:
         return None
+    if line[0] == '#':
+        return None
     if line[:2] == '-i':
         return None
 
